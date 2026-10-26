@@ -8,10 +8,10 @@ entry. Planned items below are not implemented yet.
 | --- | --- | --- |
 | Project setup | uv environment, lockfile, README | Complete |
 | First tool | Fake orders and order lookup | Complete |
-| Repository foundation | Python package layout and local Git history | Package complete; Git initialization pending permission |
-| Store behavior | Explicit refund policy and simulated refund tool | Planned |
-| Tool tests | Deterministic tests for eligibility and duplicate refunds | Planned |
-| Agent | LLM tool-calling loop and CLI; documented API key setup | Planned |
+| Repository foundation | Python package layout and local Git history | Complete |
+| Store behavior | Explicit refund policy and simulated refund tool | Complete |
+| Tool tests | Deterministic tests for eligibility and duplicate refunds | Complete (10 passing cases) |
+| Agent | LLM tool-calling loop and CLI; documented API key setup | All three tools connected; live refund verification next |
 | Tracing | Tool arguments, results, final responses, timing, token usage | Planned |
 | Evaluation | Fixed scenarios, expected outcomes, trace checks, toolkit integration | Planned |
 | Experiment | Baseline versus one agent change, with measured results | Planned |

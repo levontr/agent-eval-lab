@@ -7,8 +7,9 @@ The intended agent will look up orders, consult a refund policy, and issue
 simulated refunds. Evaluation will check both customer outcomes and the tool
 calls used to produce them. All store data is fictional.
 
-**Status:** project setup and order lookup are implemented. The agent and
-evaluation pipeline are planned; no model or evaluation results exist yet.
+**Status:** store tools and a Claude agent with lookup, policy, and simulated
+refunds are implemented. Live order lookup was verified by the user. The full
+refund workflow is tested offline; live refund behavior and evaluations are next.
 
 See the [build journal](docs/build-journal.md) for completed steps and commands,
 and the [roadmap](docs/roadmap.md) for upcoming checkpoints.
@@ -34,20 +35,69 @@ uv run support-agent --help
 
 ## Project files
 
-- `src/support_agent_lab/store.py`: fake data and the first tool.
+- `src/support_agent_lab/store.py`: fake data, order lookup, and simulated refunds.
 - `src/support_agent_lab/cli.py`: command-line argument handling and output.
+- `src/support_agent_lab/policy.py`: fictional refund rules exposed as a tool.
 - `src/support_agent_lab/__init__.py`: identifies the Python package.
 - `pyproject.toml`: project metadata, Python requirement, and dependencies.
 - `.python-version`: Python version selected by uv.
 - `uv.lock`: dependency resolution managed by uv; commit this file.
 - `.venv/`: local environment managed by uv; do not commit this folder.
 
-There are no third-party runtime dependencies yet; `uv_build` builds the package.
+The `anthropic` SDK connects to Claude; `uv_build` builds the package.
 When we need a runtime dependency, use `uv add` to
 update the project and lockfile together. Use `uv run` to run commands inside
 the project environment without manually activating it.
 
+## First model call
+
+In a terminal where `ANTHROPIC_API_KEY` is exported, run:
+
+```bash
+uv run python -m support_agent_lab.llm "Say hello in one sentence."
+```
+
+This sends one API request and uses API credits. It does not yet use our store
+tools. The default model is `claude-haiku-5-5`; override with `--model MODEL_ID`
+if needed. The SDK reads the key from the environment; never commit the key.
+This command does not automatically load `.env` files.
+
+## Support agent
+
+```bash
+uv run python -m support_agent_lab.agent "What happened to order ORD-001?"
+```
+
+Requires `ANTHROPIC_API_KEY` in the environment and uses API credits. Prints each
+tool call and its result, then the final answer. Claude has order lookup, policy,
+and simulated refund tools. The loop stops after at most five model requests.
+
+Compare an eligibility question with a refund request:
+
+```bash
+uv run python -m support_agent_lab.agent "Is ORD-001 eligible for a refund?"
+uv run python -m support_agent_lab.agent "Please refund ORD-001 if eligible."
+```
+
+The first should only look up the order and policy. The second should additionally
+call `issue_refund`. Each command starts with fresh store data. Customer intent
+and checking the policy first are prompt instructions, not hard enforcement in
+the dispatcher; upcoming evaluations will measure whether Claude follows them.
+
+## Tests
+
+```bash
+uv run pytest -q
+```
+
+The tests verify lookups, full refunds, rejected refunds without state changes,
+duplicate protection, and the two-day eligibility boundary. Each test gets an
+isolated copy of the store. No API key or LLM is needed.
+
 ## Learning path
+
+Refunds only change in-memory data within the current Python process. Restarting
+Python resets the store. No real payments or persistent storage are involved.
 
 1. Fake store and order lookup (current checkpoint).
 2. Refund policy and simulated refund tool.

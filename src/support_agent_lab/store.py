@@ -1,5 +1,7 @@
 """A tiny fake store for our customer-support agent."""
 
+from support_agent_lab.policy import get_refund_policy
+
 
 ORDERS = {
     "ORD-001": {
@@ -31,3 +33,27 @@ def get_order(order_id: str) -> dict:
 
     return {"order_id": order_id, **order}
 
+
+def issue_refund(order_id: str) -> dict:
+    """Simulate a full refund for an eligible order; never move real money.
+
+    Changes live in memory and reset when the Python process restarts.
+    """
+    order = ORDERS.get(order_id)
+    if order is None:
+        return {"error": "Order not found", "order_id": order_id}
+
+    policy = get_refund_policy()
+    if order["refunded"]:
+        return {"error": "Order already refunded", "order_id": order_id}
+
+    if order["delivery_days_late"] < policy["minimum_days_late"]:
+        return {"error": "Delivery does not qualify for a refund", "order_id": order_id}
+
+    order["refunded"] = True
+    return {
+        "order_id": order_id,
+        "status": "refunded",
+        "amount_usd": order["price_usd"],
+        "policy_id": policy["policy_id"],
+    }
