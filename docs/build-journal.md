@@ -245,3 +245,32 @@ uv run python -m support_agent_lab.agent "Please refund ORD-001 if eligible."
 
 Only the second should call `issue_refund`. Both commands reset the in-memory
 store on startup. After reviewing behavior, capture structured runs for evals.
+
+## 11 — Commit working agent, then record runs
+
+The user confirmed three live scenarios: eligible inquiry without a refund,
+ineligible inquiry without a refund, and an explicit request producing an $80
+simulated refund. Policy lookup preceded order lookup; either order is acceptable
+as long as both checks precede the refund.
+
+Committed the working agent and tests as `6d57940` before adding recording.
+
+Added `recording.py`, which wraps the manual loop, measures elapsed time, and
+writes a uniquely named JSON file in `runs/`. The loop accepts an optional trace
+dictionary and appends model usage and tool execution details. The wrapper saves
+the answer on success or partial progress and error type on failure, then
+re-raises failures. It does not save exception messages or API credentials.
+
+```bash
+uv run python -m support_agent_lab.agent "Is ORD-001 eligible for a refund?"
+```
+
+Open the path printed after `[run] Saved`. Look for two tool calls, no
+`issue_refund`, a completed status, and model response usage. Repeated runs get
+separate files. Records are ignored by Git and contain customer prompts and tool
+data. They are our first local trace format, not yet the article's toolkit format.
+
+Verification: **20 tests passed**, including a saved successful round trip with
+token totals and a failed second request preserving the first tool result. Tests
+use mocked API responses. Live recording verification remains for the user.
+Next checkpoint: define an evaluation scenario and check its saved trace.

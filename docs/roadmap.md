@@ -12,7 +12,7 @@ entry. Planned items below are not implemented yet.
 | Store behavior | Explicit refund policy and simulated refund tool | Complete |
 | Tool tests | Deterministic tests for eligibility and duplicate refunds | Complete (10 passing cases) |
 | Agent | LLM tool-calling loop and CLI; documented API key setup | All three tools connected; live refund verification next |
-| Tracing | Tool arguments, results, final responses, timing, token usage | Planned |
+| Tracing | Tool arguments, results, final responses, timing, token usage | Local JSON recording complete; live verification next |
 | Evaluation | Fixed scenarios, expected outcomes, trace checks, toolkit integration | Planned |
 | Experiment | Baseline versus one agent change, with measured results | Planned |
 | Publication | CI, reproducible demo, limitations, and GitHub publishing | Planned |

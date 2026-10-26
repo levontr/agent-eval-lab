@@ -84,6 +84,19 @@ call `issue_refund`. Each command starts with fresh store data. Customer intent
 and checking the policy first are prompt instructions, not hard enforcement in
 the dispatcher; upcoming evaluations will measure whether Claude follows them.
 
+## Run records
+
+Each agent CLI invocation saves `runs/<unique-id>.json` and prints its path.
+Use `--runs-dir DIRECTORY` to choose another location. Records include the
+request, requested/returned model IDs, prompt and tool definitions, ordered tool
+calls and results, final answer, elapsed time, and API-reported token usage.
+Failed runs save partial progress and an error type, then raise the error.
+
+These are local JSON records, not yet OpenTelemetry traces or evaluation scores.
+Usage totals cover received responses; a failed API request may have unknown
+usage. No dollar cost is calculated. `runs/` is ignored by Git because records
+contain user input and tool data. No API key is recorded explicitly.
+
 ## Tests
 
 ```bash

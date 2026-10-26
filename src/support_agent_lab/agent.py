@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+from time import perf_counter
 
 from anthropic import Anthropic
 
@@ -67,11 +68,13 @@ def execute_tool(name: str, arguments: object) -> dict:
     return issue_refund(arguments["order_id"])
 
 
-def run_agent(client: Anthropic, prompt: str, model: str) -> str:
+def run_agent(client: Anthropic, prompt: str, model: str, trace: dict | None = None) -> str:
     messages = [{"role": "user", "content": prompt}]
 
     # A hard limit prevents an endless sequence of model/tool calls.
     for _ in range(5):
+        if trace is not None:
+            trace["model_requests"] += 1
         response = client.messages.create(
             model=model,
             max_tokens=1024,
@@ -81,6 +84,12 @@ def run_agent(client: Anthropic, prompt: str, model: str) -> str:
             messages=messages,
         )
         print(response.stop_reason)
+        if trace is not None:
+            trace["model_responses"].append({
+                "model": response.model,
+                "stop_reason": response.stop_reason,
+                "usage": response.usage.model_dump(mode="json"),
+            })
         if response.stop_reason == "end_turn":
             return "\n".join(block.text for block in response.content if block.type == "text")
         if response.stop_reason != "tool_use":
@@ -92,7 +101,16 @@ def run_agent(client: Anthropic, prompt: str, model: str) -> str:
         for block in response.content:
             if block.type != "tool_use":
                 continue
+            started = perf_counter()
             result = execute_tool(block.name, block.input)
+            if trace is not None:
+                trace["tool_calls"].append({
+                    "id": block.id,
+                    "name": block.name,
+                    "arguments": block.input,
+                    "result": result,
+                    "duration_seconds": perf_counter() - started,
+                })
             print(f"[tool] {block.name}({json.dumps(block.input)}) -> {json.dumps(result)}")
             results.append({
                 "type": "tool_result",
@@ -111,11 +129,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Ask the support agent (uses API credits; refunds are simulated).")
     parser.add_argument("prompt")
     parser.add_argument("--model", default="claude-haiku-5-5")
+    parser.add_argument("--runs-dir", default="runs", help="Directory for JSON run records")
     args = parser.parse_args()
     if not os.environ.get("ANTHROPIC_API_KEY"):
         parser.error("Export ANTHROPIC_API_KEY in this terminal first.")
     with Anthropic(timeout=30.0, max_retries=0) as client:
-        print(run_agent(client, args.prompt, args.model))
+        from support_agent_lab.recording import run_and_record
+
+        print(run_and_record(client, args.prompt, args.model, args.runs_dir))
 
 
 if __name__ == "__main__":
