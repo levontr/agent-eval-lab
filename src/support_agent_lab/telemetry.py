@@ -3,6 +3,7 @@
 from contextlib import contextmanager
 from contextvars import ContextVar
 
+from openinference.instrumentation.anthropic import AnthropicInstrumentor
 from openinference.semconv.trace import SpanAttributes as Attr
 from opentelemetry import trace
 from opentelemetry.sdk.resources import Resource
@@ -40,27 +41,18 @@ def trace_run(path, prompt: str):
             out=output, formatter=lambda span: span.to_json(indent=None) + "\n"
         )))
         token = _tracer.set(provider.get_tracer("support_agent_lab"))
+        instrumentor = AnthropicInstrumentor()
+        owns_instrumentation = False
         try:
+            if instrumentor.is_instrumented_by_opentelemetry:
+                raise RuntimeError("Anthropic tracing is already configured; concurrent recorded runs are not supported.")
+            instrumentor.instrument(tracer_provider=provider)
+            owns_instrumentation = True
             with operation("support_agent", "AGENT") as span:
                 span.set_attribute(Attr.INPUT_VALUE, prompt)
                 yield span
         finally:
+            if owns_instrumentation:
+                instrumentor.uninstrument()
             provider.shutdown()
             _tracer.reset(token)
-
-
-def call_model(client, **kwargs):
-    """Trace one SDK request while leaving conversation management in agent.py."""
-    with operation("anthropic.messages.create", "LLM") as span:
-        span.set_attribute(Attr.LLM_MODEL_NAME, kwargs["model"])
-        response = client.messages.create(**kwargs)
-        span.set_attribute("llm.finish_reason", response.stop_reason)
-        usage = getattr(response, "usage", None)
-        for field, attribute in [
-            ("input_tokens", Attr.LLM_TOKEN_COUNT_PROMPT),
-            ("output_tokens", Attr.LLM_TOKEN_COUNT_COMPLETION),
-        ]:
-            value = getattr(usage, field, None)
-            if isinstance(value, int):
-                span.set_attribute(attribute, value)
-        return response

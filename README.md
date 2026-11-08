@@ -103,10 +103,16 @@ tool executions are children of the agent span. The summary's `otel_trace_id`
 links to this trace. Spans include timing, tool inputs/results, model input/output
 token counts, and failure status. The summary retains fuller API usage details.
 
-This is manual OpenTelemetry instrumentation using OpenInference conventions,
-not automatic Anthropic instrumentation. The SDK's console exporter writes to a
+Model requests are automatically instrumented by `AnthropicInstrumentor` using
+our OpenTelemetry provider. Agent and local tool spans remain explicit in our
+code. The SDK's console exporter writes to a
 local file; this is not OTLP wire format. A collector/dashboard and the article's
 evaluation toolkit are not connected yet. No telemetry is sent to a remote service.
+
+The instrumentor wraps SDK methods process-wide. This CLI enables it for one run
+and removes it afterward; concurrent or nested recorded runs are not supported.
+Auto-instrumentation can capture message content and API exception details, unlike
+our earlier model wrapper. Local trace files should be reviewed before sharing.
 
 ## Tests
 

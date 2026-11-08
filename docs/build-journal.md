@@ -314,3 +314,35 @@ The current checkpoint preserves manual OpenTelemetry instrumentation before
 the planned auto-instrumentation migration. Package version remains `0.1.0`;
 Git commits identify the learning checkpoints. No automatic integration has been
 added yet. Updated the roadmap to reflect the user's verified live refund runs.
+
+## 14 — Automatic model-call instrumentation (2026-11-08)
+
+Preserved the manual version in commit `c0bdaf0`, then installed
+`openinference-instrumentation-anthropic` (resolved version 3.3.1, compatible with
+our Anthropic 2.3.0 SDK). `trace_run()` now calls
+`AnthropicInstrumentor().instrument(tracer_provider=provider)` before the agent
+span starts, and removes the instrumentation in cleanup. Existing instrumentation
+is rejected to avoid taking ownership of another provider. This setup supports
+sequential CLI runs, not concurrent recorded runs.
+
+Removed `call_model()`; the agent calls `client.messages.create()` directly.
+The integration creates the LLM spans and extracts SDK metadata. Our application
+still creates agent and local tool spans. The summary JSON remains unchanged.
+Unlike our old wrapper, the integration may capture API exception details and
+message content; generated records remain local and ignored by Git.
+
+Added real SDK integration tests with `httpx2.MockTransport` so no network or paid
+API calls occur. Declared `httpx2` as a development dependency for these tests.
+Verified exactly two LLM spans for a two-request flow, usage, parent IDs, two
+sequential runs, and failure cleanup. Plain mock-client tests now expect only
+application spans, because fake methods bypass SDK instrumentation.
+
+Validation: **22 tests passed**. Run the existing eligibility command to verify
+live output; expect three LLM, two TOOL, and one AGENT span for the previously
+observed sequence. Actual tool choices can differ between live runs.
+
+Live verification: inspected `e763c580de7b415f9fab52c2bfa60792.otel.jsonl`
+provided by the user. It contains exactly three LLM, two TOOL, and one AGENT
+span with a shared trace ID and correct parent links. The eligibility-only run
+did not issue a refund. Duration was 3.09 seconds with 2,956 input tokens and 213
+output tokens. This validates tracing for this run, not general agent reliability.

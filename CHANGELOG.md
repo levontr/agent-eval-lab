@@ -4,7 +4,20 @@ This log summarizes the project at each checkpoint. The [build journal](docs/bui
 contains the detailed commands and explanations. These are learning milestones,
 not published package releases; the package version remains `0.1.0`.
 
-## 2026-11-08 — Manual OpenTelemetry tracing
+## 2026-11-08 — Automatic Anthropic instrumentation
+
+- Replaced `call_model()` with direct SDK calls and `AnthropicInstrumentor`.
+- Kept explicit agent and tool spans and both local output formats.
+- Instrumentation is enabled and removed for each sequential CLI run. Existing
+  process-wide instrumentation is rejected rather than overwritten.
+- 22 tests pass, including real SDK calls over a fake HTTP transport: one LLM
+  span per request, token counts, parent links, sequential runs, and API failures.
+- Inspected the user's live run: three automatic LLM spans, two explicit TOOL
+  spans, one AGENT span, correct parent links, and no duplicate model spans.
+- Automatic spans may include request/response content and API exception details.
+- Next: implement the first behavioral evaluation.
+
+## 2026-11-08 — Manual OpenTelemetry tracing (`c0bdaf0`)
 
 ### Current capabilities
 

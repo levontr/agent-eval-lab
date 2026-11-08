@@ -36,11 +36,11 @@ def test_completed_record_contains_tool_results_answer_and_usage(tmp_path):
     spans = [json.loads(line) for line in next(tmp_path.glob("*.otel.jsonl")).read_text().splitlines()]
     root = next(span for span in spans if span["name"] == "support_agent")
     children = [span for span in spans if span is not root]
-    assert len(children) == 3  # Two model requests and one local tool execution.
+    assert len(children) == 1  # Mock clients bypass Anthropic SDK instrumentation.
     assert all(span["parent_id"] == root["context"]["span_id"] for span in children)
     assert all(span["context"]["trace_id"] == root["context"]["trace_id"] for span in spans)
     assert root["context"]["trace_id"] == "0x" + record["otel_trace_id"]
-    assert sorted(span["attributes"]["openinference.span.kind"] for span in children) == ["LLM", "LLM", "TOOL"]
+    assert children[0]["attributes"]["openinference.span.kind"] == "TOOL"
 
 
 def test_failure_preserves_partial_trace_and_raises(tmp_path):

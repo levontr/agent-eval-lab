@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "anthropic>=2.3.0",
+    "openinference-instrumentation-anthropic>=2",
     "openinference-semantic-conventions>=0.1.42",
     "opentelemetry-sdk>=1.45.1",
 ]
@@ -19,5 +20,6 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "httpx2>=2.16.0",
     "pytest>=9.1.1",
 ]

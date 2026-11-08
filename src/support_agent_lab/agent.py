@@ -9,7 +9,7 @@ from anthropic import Anthropic
 
 from support_agent_lab.policy import get_refund_policy
 from support_agent_lab.store import get_order, issue_refund
-from support_agent_lab.telemetry import Attr, call_model, operation
+from support_agent_lab.telemetry import Attr, operation
 
 
 ORDER_TOOL = {
@@ -76,7 +76,7 @@ def run_agent(client: Anthropic, prompt: str, model: str, trace: dict | None = N
     for _ in range(5):
         if trace is not None:
             trace["model_requests"] += 1
-        response = call_model(client,
+        response = client.messages.create(
             model=model,
             max_tokens=1024,
             system=SYSTEM_PROMPT,

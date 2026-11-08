@@ -13,7 +13,7 @@ entry. Planned items below are not implemented yet.
 | Tool tests | Deterministic tests for eligibility and duplicate refunds | Complete (10 passing cases) |
 | Agent | LLM tool-calling loop and CLI; documented API key setup | Complete; live eligibility and refund scenarios verified by user |
 | Tracing | Tool arguments, results, final responses, timing, token usage | JSON recording verified live; OpenTelemetry/OpenInference spans added and tested offline |
-| Automatic instrumentation | Replace manual model-call spans with the Anthropic integration | Next checkpoint |
+| Automatic instrumentation | Replace manual model-call spans with the Anthropic integration | Complete; verified with real SDK and fake HTTP responses; live run next |
 | Evaluation | Fixed scenarios, expected outcomes, trace checks, toolkit integration | Planned |
 | Experiment | Baseline versus one agent change, with measured results | Planned |
 | Publication | CI, reproducible demo, limitations, and GitHub publishing | Planned |
