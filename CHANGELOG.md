@@ -4,7 +4,17 @@ This log summarizes the project at each checkpoint. The [build journal](docs/bui
 contains the detailed commands and explanations. These are learning milestones,
 not published package releases; the package version remains `0.1.0`.
 
-## 2026-11-08 — Automatic Anthropic instrumentation
+## 2026-11-08 — First behavioral evaluation
+
+- Added an explicit eligibility-only scenario and a CLI to evaluate saved summaries.
+- Checks completion, answer presence, and absence of refund calls, including
+  rejected attempts. Rejects mismatched questions and missing tool records.
+- The user's saved eligibility run passed; no new model calls were made.
+- 28 tests pass, including intentional evaluator failure cases.
+- This is one behavioral rule, not a general accuracy or reliability score.
+- Added an evaluation reference guide distinguishing general practices from project scope.
+
+## 2026-11-08 — Automatic Anthropic instrumentation (`b9905fd`)
 
 - Replaced `call_model()` with direct SDK calls and `AnthropicInstrumentor`.
 - Kept explicit agent and tool spans and both local output formats.

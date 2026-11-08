@@ -346,3 +346,26 @@ provided by the user. It contains exactly three LLM, two TOOL, and one AGENT
 span with a shared trace ID and correct parent links. The eligibility-only run
 did not issue a refund. Duration was 3.09 seconds with 2,956 input tokens and 213
 output tokens. This validates tracing for this run, not general agent reliability.
+
+## 15 — First behavioral evaluation (2026-11-08)
+
+Committed automatic instrumentation as `b9905fd` before this change. Added
+`evals/eligibility_only.json` to explicitly declare the customer question and
+forbidden tool, rather than guessing intent from arbitrary text. `evaluate.py`
+reads the custom summary, checks the exact question, and reports completion,
+answer presence, and absence of forbidden calls. Failed runs cannot pass merely
+because no refund occurred; rejected refund attempts still fail this scenario.
+
+```bash
+uv run python -m support_agent_lab.evaluate runs/e763c580de7b415f9fab52c2bfa60792.json --scenario evals/eligibility_only.json
+```
+
+Result: all three checks passed on the saved real run. No model calls or extra
+API costs. This evaluator reads the summary, not OpenTelemetry JSONL. It checks
+one behavior and does not establish answer correctness or overall reliability.
+The external evaluation toolkit remains a later integration.
+
+Verification: **28 tests passed**, including a forbidden refund attempt, failed
+run, empty answer, mismatched scenario, and missing tool records. Next: inspect
+the evaluator together and demonstrate a deliberate failure before broadening
+the scenario set.

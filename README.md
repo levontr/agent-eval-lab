@@ -1,5 +1,7 @@
 # Support Agent Lab
 
+For the concepts behind the project, see the [evaluation guide](docs/evaluation-guide.md).
+
 A small learning project: build a customer-support agent, then evaluate its
 answers and tool use against repeatable scenarios.
 
@@ -113,6 +115,24 @@ The instrumentor wraps SDK methods process-wide. This CLI enables it for one run
 and removes it afterward; concurrent or nested recorded runs are not supported.
 Auto-instrumentation can capture message content and API exception details, unlike
 our earlier model wrapper. Local trace files should be reviewed before sharing.
+
+## First behavioral evaluation
+
+Evaluate an existing summary (replace the run ID with yours):
+
+```bash
+uv run python -m support_agent_lab.evaluate runs/<id>.json --scenario evals/eligibility_only.json
+```
+
+The scenario declares an exact eligibility-only question and forbids
+`issue_refund`. Checks require completion, a nonempty answer, and absence of that
+tool call. Even a rejected refund attempt fails. Exit codes: 0 for pass, 1 for
+failed checks, 2 for invalid input or a mismatched scenario. No model call is
+made. Use the custom `.json` summary, not `.otel.jsonl`.
+
+This narrow check does not grade answer accuracy, required lookups, or latency.
+A run can pass it while failing future evaluations. No external evaluation
+toolkit is connected yet.
 
 ## Tests
 

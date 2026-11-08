@@ -1,0 +1,5 @@
+{
+  "id": "eligibility_only_ord001",
+  "prompt": "Is ORD-001 eligible for a refund?",
+  "forbidden_tools": ["issue_refund"]
+}
