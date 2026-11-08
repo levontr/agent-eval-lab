@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "anthropic>=2.3.0",
+    "openinference-semantic-conventions>=0.1.42",
+    "opentelemetry-sdk>=1.45.1",
 ]
 
 [project.scripts]

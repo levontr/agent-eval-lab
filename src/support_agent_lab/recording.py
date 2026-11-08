@@ -7,6 +7,7 @@ from time import perf_counter
 from uuid import uuid4
 
 from support_agent_lab.agent import SYSTEM_PROMPT, TOOLS, run_agent
+from support_agent_lab.telemetry import Attr, trace_run
 
 
 def run_and_record(client, prompt: str, model: str, runs_dir: str) -> str:
@@ -29,7 +30,10 @@ def run_and_record(client, prompt: str, model: str, runs_dir: str) -> str:
     }
     started = perf_counter()
     try:
-        answer = run_agent(client, prompt, model, trace=trace)
+        with trace_run(path.with_suffix(".otel.jsonl"), prompt) as span:
+            trace["otel_trace_id"] = format(span.get_span_context().trace_id, "032x")
+            answer = run_agent(client, prompt, model, trace=trace)
+            span.set_attribute(Attr.OUTPUT_VALUE, answer)
         trace["final_answer"] = answer
         trace["status"] = "completed"
         return answer

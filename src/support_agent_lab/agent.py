@@ -9,6 +9,7 @@ from anthropic import Anthropic
 
 from support_agent_lab.policy import get_refund_policy
 from support_agent_lab.store import get_order, issue_refund
+from support_agent_lab.telemetry import Attr, call_model, operation
 
 
 ORDER_TOOL = {
@@ -75,7 +76,7 @@ def run_agent(client: Anthropic, prompt: str, model: str, trace: dict | None = N
     for _ in range(5):
         if trace is not None:
             trace["model_requests"] += 1
-        response = client.messages.create(
+        response = call_model(client,
             model=model,
             max_tokens=1024,
             system=SYSTEM_PROMPT,
@@ -102,7 +103,12 @@ def run_agent(client: Anthropic, prompt: str, model: str, trace: dict | None = N
             if block.type != "tool_use":
                 continue
             started = perf_counter()
-            result = execute_tool(block.name, block.input)
+            with operation(block.name, "TOOL") as span:
+                span.set_attribute(Attr.TOOL_NAME, block.name)
+                span.set_attribute(Attr.INPUT_VALUE, json.dumps(block.input))
+                result = execute_tool(block.name, block.input)
+                span.set_attribute(Attr.OUTPUT_VALUE, json.dumps(result))
+                span.set_attribute("tool.rejected", "error" in result)
             if trace is not None:
                 trace["tool_calls"].append({
                     "id": block.id,

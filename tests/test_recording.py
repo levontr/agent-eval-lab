@@ -33,6 +33,14 @@ def test_completed_record_contains_tool_results_answer_and_usage(tmp_path):
     assert record["token_usage"]["input_tokens"] == 200
     assert record["token_usage"]["output_tokens"] == 40
     assert record["duration_seconds"] >= 0
+    spans = [json.loads(line) for line in next(tmp_path.glob("*.otel.jsonl")).read_text().splitlines()]
+    root = next(span for span in spans if span["name"] == "support_agent")
+    children = [span for span in spans if span is not root]
+    assert len(children) == 3  # Two model requests and one local tool execution.
+    assert all(span["parent_id"] == root["context"]["span_id"] for span in children)
+    assert all(span["context"]["trace_id"] == root["context"]["trace_id"] for span in spans)
+    assert root["context"]["trace_id"] == "0x" + record["otel_trace_id"]
+    assert sorted(span["attributes"]["openinference.span.kind"] for span in children) == ["LLM", "LLM", "TOOL"]
 
 
 def test_failure_preserves_partial_trace_and_raises(tmp_path):
@@ -54,3 +62,8 @@ def test_failure_preserves_partial_trace_and_raises(tmp_path):
     assert record["error_type"] == "RuntimeError"
     assert record["final_answer"] is None
     assert "sensitive exception detail" not in raw
+    span_text = next(tmp_path.glob("*.otel.jsonl")).read_text()
+    spans = [json.loads(line) for line in span_text.splitlines()]
+    root = next(span for span in spans if span["name"] == "support_agent")
+    assert root["status"]["status_code"] == "ERROR"
+    assert "sensitive exception detail" not in span_text

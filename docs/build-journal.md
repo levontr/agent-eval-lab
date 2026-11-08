@@ -274,3 +274,43 @@ Verification: **20 tests passed**, including a saved successful round trip with
 token totals and a failed second request preserving the first tool result. Tests
 use mocked API responses. Live recording verification remains for the user.
 Next checkpoint: define an evaluation scenario and check its saved trace.
+
+## 12 — Standard span structure
+
+Inspected the user's saved eligibility run: two tools, three model requests,
+no refund, completed status, 2,956 input tokens, 258 output tokens, 3.74 seconds.
+The JSON recording checkpoint was already committed as `e89114f`; the working
+tree was clean when asked to commit and move on.
+
+Installed dependencies:
+
+```bash
+uv add opentelemetry-sdk openinference-semantic-conventions --cache-dir .uv-cache
+```
+
+Added `telemetry.py`: a per-run OpenTelemetry provider and local exporter,
+OpenInference operation labels, and a wrapper around model requests. Instrumented
+the agent and tool execution with parent/child spans. Export produces
+`runs/<id>.otel.jsonl` alongside the original summary; `otel_trace_id` links them.
+Exception types and error status are recorded without raw exception text.
+
+This uses manual instrumentation with standard span conventions, not the
+Anthropic auto-instrumentor. Export is SDK diagnostic JSON, not OTLP wire format;
+a remote collector or trace viewer is a future integration.
+
+Verification: **20 tests passed**, extended to check shared trace IDs, parent
+span IDs, operation labels, and failure status. No live API request was made.
+To try it, run the existing agent command and inspect both newly generated files.
+
+References:
+- https://opentelemetry.io/docs/languages/python/instrumentation/
+- https://arize-ai.github.io/openinference/spec/semantic_conventions.html
+
+## 13 — Preserve the manual tracing checkpoint (2026-11-08)
+
+Added `CHANGELOG.md` as a concise history of capabilities, validation, limitations,
+and planned changes. Keep this journal for detailed explanations and commands.
+The current checkpoint preserves manual OpenTelemetry instrumentation before
+the planned auto-instrumentation migration. Package version remains `0.1.0`;
+Git commits identify the learning checkpoints. No automatic integration has been
+added yet. Updated the roadmap to reflect the user's verified live refund runs.

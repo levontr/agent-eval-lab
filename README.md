@@ -92,10 +92,21 @@ request, requested/returned model IDs, prompt and tool definitions, ordered tool
 calls and results, final answer, elapsed time, and API-reported token usage.
 Failed runs save partial progress and an error type, then raise the error.
 
-These are local JSON records, not yet OpenTelemetry traces or evaluation scores.
+The summary JSON is our custom format, not an evaluation score.
 Usage totals cover received responses; a failed API request may have unknown
 usage. No dollar cost is calculated. `runs/` is ignored by Git because records
 contain user input and tool data. No API key is recorded explicitly.
+
+Each run also writes `runs/<same-id>.otel.jsonl`: one OpenTelemetry span per
+line, using OpenInference's `AGENT`, `LLM`, and `TOOL` labels. Model requests and
+tool executions are children of the agent span. The summary's `otel_trace_id`
+links to this trace. Spans include timing, tool inputs/results, model input/output
+token counts, and failure status. The summary retains fuller API usage details.
+
+This is manual OpenTelemetry instrumentation using OpenInference conventions,
+not automatic Anthropic instrumentation. The SDK's console exporter writes to a
+local file; this is not OTLP wire format. A collector/dashboard and the article's
+evaluation toolkit are not connected yet. No telemetry is sent to a remote service.
 
 ## Tests
 

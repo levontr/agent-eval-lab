@@ -11,8 +11,9 @@ entry. Planned items below are not implemented yet.
 | Repository foundation | Python package layout and local Git history | Complete |
 | Store behavior | Explicit refund policy and simulated refund tool | Complete |
 | Tool tests | Deterministic tests for eligibility and duplicate refunds | Complete (10 passing cases) |
-| Agent | LLM tool-calling loop and CLI; documented API key setup | All three tools connected; live refund verification next |
-| Tracing | Tool arguments, results, final responses, timing, token usage | Local JSON recording complete; live verification next |
+| Agent | LLM tool-calling loop and CLI; documented API key setup | Complete; live eligibility and refund scenarios verified by user |
+| Tracing | Tool arguments, results, final responses, timing, token usage | JSON recording verified live; OpenTelemetry/OpenInference spans added and tested offline |
+| Automatic instrumentation | Replace manual model-call spans with the Anthropic integration | Next checkpoint |
 | Evaluation | Fixed scenarios, expected outcomes, trace checks, toolkit integration | Planned |
 | Experiment | Baseline versus one agent change, with measured results | Planned |
 | Publication | CI, reproducible demo, limitations, and GitHub publishing | Planned |
