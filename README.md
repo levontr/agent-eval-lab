@@ -102,3 +102,5 @@ The CLI runs sequentially; its tracing setup does not support concurrent runs.
 
 Built with AI assistance, then inspected and tested through the experiments above.
 Inspired by [Evaluating AI agents: moving past the vibe check](https://developers.googleblog.com/evaluating-ai-agents-moving-past-the-vibe-check/).
+
+Licensed under [MIT](LICENSE).
