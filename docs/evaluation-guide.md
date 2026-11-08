@@ -1,75 +1,55 @@
-# Evaluation: concepts and project scope
+# Evaluation notes
 
-## The pieces
+A scenario defines the input, initial state, and expected behavior. A runner
+executes it. A trace records what happened. An evaluator checks that evidence.
 
-- **Scenario:** an input, initial conditions, and expectations defined before execution.
-- **Runner:** executes the agent on scenarios, resetting state between cases.
-- **Trace:** evidence of what actually happened (calls, results, timing, usage).
-- **Evaluator:** applies expectations to that evidence.
-- **Experiment:** a collection of runs and scores for one agent configuration.
+## What to rerun
 
-Our scenario JSON is our own format. OpenTelemetry provides span timing, IDs,
-relationships, and export. OpenInference supplies AI conventions and integrations.
-Neither decides what correct business behavior means.
+Changing the agent, model, or prompt requires new executions. Regrading an old
+trace only tells you something about that old execution. Changing an evaluator
+can justify regrading stored traces.
 
-## Development and release workflow
+Keep scenarios and checks fixed when comparing versions. Reset mutable state
+between cases. Repeat important cases: one pass is not a reliability estimate.
+Record model, code, prompt, dataset, and evaluator versions for serious comparisons.
+Our runner saves scenario snapshots, fixtures, and the requested model; it does
+not yet capture every version automatically.
 
-Keep a versioned scenario set. After changing prompts, models, or agent code,
-execute the changed agent to generate new traces and compare evaluation results.
-Regrading old traces tests an evaluator or reexamines old behavior; it cannot
-establish that changed agent code works. Add cases for new requirements and bugs;
-do not silently weaken old expectations to make a change pass.
+## Code checks and LLM judges
 
-Run the same suite locally and, eventually, in a CI job. Fast deterministic
-tests can run on every change. Live model suites need credentials and budgets;
-run selected cases before merging and broader/repeated experiments as appropriate.
-Offline evaluation means controlled test data outside production traffic, not
-necessarily disconnected from the internet. Test tools must use isolated fixtures
-or a sandbox, not issue real payments. Reset state before each case.
+Use code for precise rules: tool names, arguments, counts, amounts, and order of
+actions. Use a judge for questions requiring interpretation, such as whether an
+answer accurately describes the result. Validate the judge against reviewed
+examples and inspect disagreements. A valid JSON response can still be wrong.
 
-Record code revision, model, prompt, dataset, and evaluator versions for comparisons.
-Repeat important cases because one passing model response is not proof of reliability.
-Use critical pass/fail rules and measured quality thresholds suited to the application.
+Neither approach replaces authorization checks in execution code. A post-run
+check can detect an unwanted refund, but cannot prevent it.
 
-## Production feedback
+## Local, CI, and production
 
-Production traces can be evaluated afterward, in background jobs or batches.
-Code can check precise rules; human reviewers or validated LLM judges can assess
-interpretive questions. Real traffic usually lacks prewritten reference answers.
-Sampling controls evaluation cost. Selected, sanitized failures can become new
-regression scenarios with explicit expectations and reproducible initial data.
+The same scenario suite can run locally or in CI. Offline evaluation means
+controlled test data, not necessarily no network. This repository's CI uses fake
+model responses; live evaluation is a separate command requiring an API key.
 
-Post-execution evaluation detects failures; it does not prevent an action already
-taken. Required authorization and other hard constraints belong in execution logic.
+Production traces can be reviewed afterward or scored in background jobs. They
+usually lack reference answers. Useful failures can become sanitized regression
+cases. Keep real side effects out of test runs.
 
-## Judges and frameworks
+Commit scenarios, fixtures, evaluators, and code. Store routine reports and traces
+as experiment artifacts. Review captured data before sharing it.
 
-Use code for exact rules (tool names, arguments, counts, amounts). Use an LLM judge
-when interpretation is required, validating it against human-labeled examples.
-Both offline and production evaluation may combine code, judges, and human review.
-A judge can be a separate API call; LangChain is not required. Evaluation platforms
-help manage datasets, runs, and reports, but do not define our requirements for us.
+## Tracing in this project
 
-## What belongs in Git
+OpenTelemetry supplies span IDs, timing, parent links, and export. OpenInference
+supplies AI conventions and an Anthropic instrumentor. Model calls are automatic;
+our agent and tool spans are explicit. The local `.otel.jsonl` files use the SDK's
+diagnostic export format, not OTLP wire format. The evaluator currently reads our
+separate summary JSON.
 
-Commit scenario definitions, synthetic fixtures, evaluators, agent code, prompts,
-dependency locks, and CI configuration. Save routine traces/reports as experiment
-artifacts rather than source files. Small reviewed traces may be committed as
-evaluator test fixtures. Review recorded customer data before sharing it.
+## References
 
-## Our scope
-
-Implemented: a small agent, isolated offline tests, local recording, automatic
-model spans, explicit tool spans, and a single-run deterministic evaluator.
-A three-scenario dataset and sequential local runner are also implemented.
-Optional later: CI, a trace viewer, an evaluation toolkit, repeated experiments,
-and LLM judging. This project has no production traffic or live payment service.
-
-## References discussed
-
-- [Evaluation lifecycle](https://docs.langchain.com/langsmith/evaluation)
-- [Evaluation concepts](https://docs.langchain.com/langsmith/evaluation-concepts)
 - [OpenTelemetry](https://opentelemetry.io/docs/what-is-opentelemetry/)
 - [OpenInference](https://arize-ai.github.io/openinference/)
+- [Evaluation lifecycle](https://docs.langchain.com/langsmith/evaluation)
 
-The LangSmith references explain the concepts; they are not project dependencies.
+LangSmith is a reference here, not a dependency. LangChain is not required.
