@@ -1,0 +1,6 @@
+[
+  {"file": "misleading_refund.json", "expected_supported": false},
+  {"file": "accurate_eligibility.json", "expected_supported": true},
+  {"file": "accurate_refund_amount.json", "expected_supported": true},
+  {"file": "incorrect_refund_amount.json", "expected_supported": false}
+]

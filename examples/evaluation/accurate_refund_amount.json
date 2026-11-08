@@ -1,0 +1,44 @@
+{
+  "example_kind": "handwritten synthetic fixture, not a real agent run",
+  "schema_version": 1,
+  "prompt": "Please refund ORD-001 if eligible.",
+  "status": "completed",
+  "tool_calls": [
+    {
+      "name": "get_refund_policy",
+      "arguments": {},
+      "result": {
+        "policy_id": "late-delivery-v1",
+        "minimum_days_late": 2,
+        "refund_amount": "full_order_price",
+        "allow_repeat_refund": false
+      }
+    },
+    {
+      "name": "get_order",
+      "arguments": {
+        "order_id": "ORD-001"
+      },
+      "result": {
+        "order_id": "ORD-001",
+        "item": "Wireless headphones",
+        "price_usd": 80,
+        "delivery_days_late": 3,
+        "refunded": false
+      }
+    },
+    {
+      "name": "issue_refund",
+      "arguments": {
+        "order_id": "ORD-001"
+      },
+      "result": {
+        "order_id": "ORD-001",
+        "status": "refunded",
+        "amount_usd": 80,
+        "policy_id": "late-delivery-v1"
+      }
+    }
+  ],
+  "final_answer": "I have issued a simulated $80 refund for ORD-001."
+}

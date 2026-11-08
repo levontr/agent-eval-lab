@@ -447,3 +447,105 @@ the committed version. The temporary prompt was never committed.
 This demonstrates regression detection and recovery for these runs, not a general
 reliability estimate. It used deterministic checks of actions, with no LLM judge.
 Generated experiment artifacts remain local and excluded from Git.
+
+## 19 — Demonstrate the answer-quality gap (2026-11-08)
+
+Committed the regression/recovery log as `eef34c3`. Deferred the article's Google
+Cloud evaluation toolkit to focus on transferable evaluation skills using the
+existing Claude setup. No extra evaluation platform is required for this exercise.
+
+Added `examples/evaluation/misleading_refund.json`, explicitly marked as a
+handwritten fixture. It contains appropriate lookup calls and no refund action,
+but the final answer claims a refund was issued. The current eligibility
+evaluator passes it: action checks are satisfied, and answer presence is the only
+text check. This demonstrates a coverage gap without changing the agent.
+
+Next: review the evidence and intended negative label together, then define the
+refund-outcome judge rubric before making a judging API call. Do not interpret
+this example's passing tool checks as an endorsement of its final answer.
+
+## 20 — Define the judge before implementing it (2026-11-08)
+
+Added a refund-outcome rubric and JSON response schema under `evals/judges/`.
+The rubric evaluates claims about actual refund outcomes against ordered tool
+evidence. It distinguishes eligibility from execution, prior refunds from new
+actions, and simulated refunds from real transfers. Output is a boolean
+`supported` and a short evidence-based `reason`.
+
+This criterion is independent of authorization and general answer quality. An
+accurate account of an unauthorized refund can pass it while failing our existing
+checks. Answers without refund-outcome claims pass only this narrow criterion.
+The README includes a manually written expected judgment for the misleading
+fixture and explains complete-record assumptions and invalid-output handling.
+
+No judging API call or model result yet. Next: implement one small judging
+function, then compare actual judgments against independently reviewed examples.
+
+## 21 — First judging function (2026-11-08)
+
+Added `judge.py` with three small steps: select/validate completed-run evidence,
+send it with the rubric and structured-output schema to Claude, and validate
+the boolean/reason response. The judge receives no tools or expected labels.
+Truncated and malformed responses are errors, not positive judgments. Failed
+runs are rejected before spending API credits. The CLI prints one judgment and
+uses exit 1 for unsupported claims; it does not yet save judge reports or join
+the suite runner. It cannot independently prove a supplied trace is complete.
+
+```bash
+uv run python -m support_agent_lab.judge examples/evaluation/misleading_refund.json
+```
+
+Verification: **51 offline tests passed**. New tests check evidence selection,
+schema forwarding, absence of tools/labels, invalid evidence, malformed output,
+and truncation. CLI help works. No paid judging call was made by the assistant;
+model accuracy remains unverified until the user runs and reviews examples.
+
+API reference: https://platform.claude.com/docs/en/build-with-claude/structured-outputs
+
+## 22 — Positive/negative answer comparison (2026-11-08)
+
+The user ran the judge on the misleading fixture. It returned `supported: false`
+and correctly explained that no successful refund call supported the claim.
+Added `accurate_eligibility.json` with identical evidence and only the final
+answer changed to acknowledge eligibility without claiming execution. Expected
+judgment: `supported: true`. The assistant verified the single-field difference;
+live positive judgment is pending the user's run. No rubric or code changed.
+
+## 23 — Judge checks refund amounts (2026-11-08)
+
+The user verified the positive eligibility example: the judge returned true and
+correctly explained that no execution was claimed. Added two synthetic successful
+refund examples with identical $80 refund evidence, differing only in the final
+answer's amount ($80 versus $800). Expected judgments are true and false,
+respectively. Verified the single-field difference and result amount locally.
+No rubric or judge code changed, and no API calls were made by the assistant.
+Live amount judgments are pending the user's two commands.
+
+## 24 — Repeatable judge check (2026-11-08)
+
+The user reported the correct-amount and incorrect-amount judgments matched
+expectations. Added `examples/evaluation/labels.json` and `check_judge.py` so the
+four examples can be checked with one command. The loader validates all examples
+before calls; only run evidence enters `judge_run`. Expected labels stay local.
+Reports distinguish matches, disagreements, and execution/validation errors and
+include the rubric, schema, examples, and model for later review.
+
+```bash
+uv run python -m support_agent_lab.check_judge
+```
+
+Each example uses one API request, with retries disabled. The command saves a
+unique report under ignored `runs/`, writes progress after each case, and continues
+after errors. Matching a negative label is a success. All-match exits 0; any
+disagreement/error exits 1. The report does not estimate population reliability.
+
+Validation: **55 offline tests passed**, including four matches, a disagreement
+and API error followed by successful cases, label validation, saved reports, and
+absence of expected labels in model requests. No paid batch run was made by the
+assistant. This small development set is not an independent held-out benchmark.
+
+Live verification: inspected `runs/judge-check-a075d98c9dc340bf9e283c401442e598.json`.
+All four examples matched, with zero disagreements and zero errors. The user
+requested committing this checkpoint while keeping the judge separate from the
+agent runner; no `--judge` flag or automatic judging was added. Generated live
+reports remain excluded from Git; synthetic examples and labels are committed.

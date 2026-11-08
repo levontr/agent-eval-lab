@@ -4,6 +4,17 @@ This log summarizes the project at each checkpoint. The [build journal](docs/bui
 contains the detailed commands and explanations. These are learning milestones,
 not published package releases; the package version remains `0.1.0`.
 
+## 2026-11-08 — Standalone refund-outcome judge
+
+- Added a narrow rubric, output schema, and single-run judging command.
+- Added four synthetic examples with separately stored reviewed labels.
+- Added a batch judge check with saved reports and separate match, disagreement,
+  and error counts; expected labels are never sent to the model.
+- 55 offline tests pass. The user's live batch matched all four labels with no
+  errors. This is a small sanity check, not a general reliability estimate.
+- Judge commands remain separate from the agent runner. No `--judge` integration
+  was added, as requested by the user.
+
 ## 2026-11-08 — Sequential evaluation runner
 
 - One command runs every scenario, records it, grades it, and writes a report.
