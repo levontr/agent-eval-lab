@@ -61,7 +61,7 @@ evaluator test fixtures. Review recorded customer data before sharing it.
 
 Implemented: a small agent, isolated offline tests, local recording, automatic
 model spans, explicit tool spans, and a single-run deterministic evaluator.
-Next: a three-scenario dataset and sequential local runner.
+A three-scenario dataset and sequential local runner are also implemented.
 Optional later: CI, a trace viewer, an evaluation toolkit, repeated experiments,
 and LLM judging. This project has no production traffic or live payment service.
 

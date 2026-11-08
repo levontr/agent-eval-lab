@@ -10,10 +10,10 @@ from support_agent_lab.agent import SYSTEM_PROMPT, TOOLS, run_agent
 from support_agent_lab.telemetry import Attr, trace_run
 
 
-def run_and_record(client, prompt: str, model: str, runs_dir: str) -> str:
+def run_and_record(client, prompt: str, model: str, runs_dir: str, *, run_id: str | None = None) -> str:
     directory = Path(runs_dir)
     directory.mkdir(parents=True, exist_ok=True)
-    path = directory / f"{uuid4().hex}.json"
+    path = directory / f"{run_id or uuid4().hex}.json"
     trace = {
         "schema_version": 1,
         "started_at": datetime.now(timezone.utc).isoformat(),

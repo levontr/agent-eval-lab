@@ -369,3 +369,59 @@ Verification: **28 tests passed**, including a forbidden refund attempt, failed
 run, empty answer, mismatched scenario, and missing tool records. Next: inspect
 the evaluator together and demonstrate a deliberate failure before broadening
 the scenario set.
+
+## 16 — Knowledge guide and three scenarios (2026-11-08)
+
+Saved our discussions in `docs/evaluation-guide.md`, separating general concepts
+from features we intend to build. Committed that guide and the original evaluator
+as `1438323` before expanding the expectations.
+
+Added eligible and ineligible refund cases, and required successful order/policy
+lookups for all three scenarios. Eligible refund checks require exactly one
+attempt, the correct order and $80 amount, and both lookups before the refund.
+Lookup order itself is flexible. These are explicitly tool-behavior checks; answer
+correctness and store snapshots are not evaluated yet. The stronger dataset is
+a new baseline, not a directly comparable score against the original single rule.
+
+Validation: **36 tests passed**, including missing/duplicate refunds, wrong amounts
+or orders, rejected actions, failed lookups, and evidence collected too late.
+The saved live eligibility run also passed the strengthened checks. No paid API
+calls were made. See `evals/README.md` for the scenario contract and initial data.
+Pause here to review expectations; next implement the sequential runner with a
+fresh store per scenario and an experiment report.
+
+## 17 — One-command evaluation runner (2026-11-08)
+
+Added `runner.py`. It loads scenario files before executing, creates one unique
+experiment directory, resets the store for each case, calls `run_and_record`,
+and passes the matching summary and scenario directly to `evaluate_run`.
+The recorder accepts an optional run ID so the runner knows each output path.
+`store.py` now retains initial fixtures separately and exposes `reset_store()`.
+
+```bash
+uv run python -m support_agent_lab.runner
+```
+
+Run from the project root with the API key exported. Output includes each case's
+PASS/FAIL, failing checks, and a total. `runs/experiment-<id>/report.json` stores
+results and scenario/fixture snapshots; case summaries and spans sit beside it.
+The runner continues after case errors, writes the report after each case, and
+restores the caller's original store in cleanup. Exit 0 means all passed; 1 means
+a case failed; argparse uses 2 for invalid setup. Failed execution is not counted
+as a behavioral pass. This implementation executes each scenario once.
+
+Validation: **40 tests passed**. Integration tests use the real SDK with fake HTTP
+responses and verify a complete suite, a partial failure with state mutation,
+subsequent execution with fresh state, saved reports/traces, and restored caller
+state. Also checked CLI help and invalid datasets. No live API calls were made.
+Next: the user runs the single command and we inspect the experiment report.
+
+Live runner verification: inspected
+`runs/experiment-16219d9ae4594a81892283666cd3ce94/report.json` from the user's run.
+All three scenarios passed every configured check. The eligible request made one
+successful refund; the eligibility inquiry and ineligible request made no refund
+attempt. Before committing, reran the offline suite: **40 passed**. Generated
+experiment files remain ignored by Git. This is a baseline for these three cases,
+not a general reliability claim. Next proposed exercise: change one agent prompt
+instruction and compare a fresh experiment with this baseline, keeping scenarios
+and evaluators fixed.

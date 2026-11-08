@@ -130,7 +130,23 @@ tool call. Even a rejected refund attempt fails. Exit codes: 0 for pass, 1 for
 failed checks, 2 for invalid input or a mismatched scenario. No model call is
 made. Use the custom `.json` summary, not `.otel.jsonl`.
 
-This narrow check does not grade answer accuracy, required lookups, or latency.
+The [three-scenario dataset](evals/README.md) also checks required lookups and,
+for eligible refund requests, one successful refund of the correct order/amount
+after those lookups.
+
+Run all three scenarios and evaluate them automatically:
+
+```bash
+uv run python -m support_agent_lab.runner
+```
+
+Run from the project root with `ANTHROPIC_API_KEY` exported. This uses API credits,
+resets the store before each case, and saves a combined report under
+`runs/experiment-<id>/report.json` with each case's traces beside it. It prints
+PASS/FAIL per case and a total; no copying run IDs is needed. A case failure does
+not skip the remaining cases. Exit code 1 means at least one case failed.
+
+These checks do not grade natural-language answer accuracy or latency.
 A run can pass it while failing future evaluations. No external evaluation
 toolkit is connected yet.
 

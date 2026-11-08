@@ -4,7 +4,26 @@ This log summarizes the project at each checkpoint. The [build journal](docs/bui
 contains the detailed commands and explanations. These are learning milestones,
 not published package releases; the package version remains `0.1.0`.
 
-## 2026-11-08 — First behavioral evaluation
+## 2026-11-08 — Sequential evaluation runner
+
+- One command runs every scenario, records it, grades it, and writes a report.
+- Resets fixture data before each case and restores caller state after the suite.
+- Continues after case failures, preserving failed-run evidence and error types.
+- Saves scenario/fixture snapshots and per-case results in an experiment directory.
+- 40 offline tests pass, including complete real-SDK flows over fake HTTP and a
+  failed case that changes state before the next scenario starts.
+- Inspected the user's live experiment: all three scenarios passed all configured checks.
+
+## 2026-11-08 — Three scenario expectations
+
+- Added eligible-refund and ineligible-refund scenarios.
+- Strengthened eligibility inquiry with required order/policy lookups.
+- Added checks for exactly one successful refund of the right order and amount,
+  with supporting lookups before the action.
+- 36 offline tests pass. The saved live eligibility run passes the stronger checks.
+- Runner and live executions of the expanded suite remain the next checkpoint.
+
+## 2026-11-08 — First behavioral evaluation (`1438323`)
 
 - Added an explicit eligibility-only scenario and a CLI to evaluate saved summaries.
 - Checks completion, answer presence, and absence of refund calls, including

@@ -1,4 +1,4 @@
-"""First offline evaluation: a scenario's forbidden tools must not be called."""
+"""Deterministic checks of recorded tool behavior against scenario expectations."""
 
 import argparse
 import json
@@ -24,6 +24,44 @@ def evaluate_run(run: dict, scenario: dict) -> dict:
         "final_answer_present": isinstance(run.get("final_answer"), str) and bool(run["final_answer"].strip()),
         "no_forbidden_tool_calls": not forbidden_calls,
     }
+
+    # Match tool arguments, not just names. A lookup of the wrong order is not evidence.
+    required = scenario.get("required_tool_calls", [])
+
+    def matches(call, expected):
+        return (
+            call["name"] == expected["name"]
+            and call.get("arguments") == expected["arguments"]
+            and isinstance(call.get("result"), dict)
+            and "error" not in call["result"]
+        )
+
+    if required:
+        checks["required_lookups_succeeded"] = all(
+            any(matches(call, expected) for call in calls) for expected in required
+        )
+
+    if "expected_refund" in scenario:
+        expected = scenario["expected_refund"]
+        refunds = [(index, call) for index, call in enumerate(calls) if call["name"] == "issue_refund"]
+        checks["exactly_one_refund_attempt"] = len(refunds) == 1
+        checks["correct_refund_succeeded"] = False
+        checks["evidence_before_refund"] = False
+        if len(refunds) == 1:
+            index, call = refunds[0]
+            result = call.get("result", {})
+            checks["correct_refund_succeeded"] = (
+                call.get("arguments") == {"order_id": expected["order_id"]}
+                and isinstance(result, dict)
+                and "error" not in result
+                and result.get("status") == "refunded"
+                and result.get("order_id") == expected["order_id"]
+                and result.get("amount_usd") == expected["amount_usd"]
+            )
+            checks["evidence_before_refund"] = all(
+                any(matches(earlier, lookup) for earlier in calls[:index])
+                for lookup in required
+            )
     return {
         "scenario_id": scenario["id"],
         "passed": all(checks.values()),

@@ -1,9 +1,10 @@
 """A tiny fake store for our customer-support agent."""
 
 from support_agent_lab.policy import get_refund_policy
+from copy import deepcopy
 
 
-ORDERS = {
+INITIAL_ORDERS = {
     "ORD-001": {
         "item": "Wireless headphones",
         "price_usd": 80,
@@ -23,6 +24,14 @@ ORDERS = {
         "refunded": True,
     },
 }
+
+ORDERS = deepcopy(INITIAL_ORDERS)
+
+
+def reset_store() -> None:
+    """Restore the fictional starting data before an evaluation scenario."""
+    global ORDERS
+    ORDERS = deepcopy(INITIAL_ORDERS)
 
 
 def get_order(order_id: str) -> dict:

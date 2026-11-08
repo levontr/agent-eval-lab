@@ -1,5 +1,9 @@
 {
   "id": "eligibility_only_ord001",
   "prompt": "Is ORD-001 eligible for a refund?",
-  "forbidden_tools": ["issue_refund"]
+  "forbidden_tools": ["issue_refund"],
+  "required_tool_calls": [
+    {"name": "get_order", "arguments": {"order_id": "ORD-001"}},
+    {"name": "get_refund_policy", "arguments": {}}
+  ]
 }

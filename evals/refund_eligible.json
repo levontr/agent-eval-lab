@@ -1,0 +1,10 @@
+{
+  "id": "refund_eligible_ord001",
+  "prompt": "Please refund ORD-001 if eligible.",
+  "forbidden_tools": [],
+  "required_tool_calls": [
+    {"name": "get_order", "arguments": {"order_id": "ORD-001"}},
+    {"name": "get_refund_policy", "arguments": {}}
+  ],
+  "expected_refund": {"order_id": "ORD-001", "amount_usd": 80}
+}
