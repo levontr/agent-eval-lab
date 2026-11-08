@@ -1,4 +1,4 @@
-# Support Agent Lab
+# Agent Eval Lab
 
 A small Claude agent for a fictional store, with tests for what it does and what
 it claims to have done.
