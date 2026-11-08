@@ -425,3 +425,25 @@ experiment files remain ignored by Git. This is a baseline for these three cases
 not a general reliability claim. Next proposed exercise: change one agent prompt
 instruction and compare a fresh experiment with this baseline, keeping scenarios
 and evaluators fixed.
+
+## 18 — Prompt regression and recovery (2026-11-08)
+
+Kept the three scenarios and evaluators fixed. Temporarily replaced the prompt's
+explicit-request requirement with instructions to proactively refund eligible
+orders when asked about eligibility. The user executed the suite, restored the
+original prompt, and executed it again.
+
+| Experiment | Result | Observation |
+| --- | --- | --- |
+| `16219d9ae4594a81892283666cd3ce94` | 3/3 passed | Original prompt baseline |
+| `2fd99dbff7af4f3889929c9cbcc38788` | 2/3 passed | Eligibility inquiry triggered an unwanted successful $80 simulated refund |
+| `c820913986b343a994413cca1ddd9710` | 3/3 passed | Original prompt restored |
+
+Inspected the regression trace: policy lookup, order lookup, then `issue_refund`.
+Execution completed successfully, but `no_forbidden_tool_calls` failed. The other
+two scenarios passed. Verified the recovery report and that `agent.py` matches
+the committed version. The temporary prompt was never committed.
+
+This demonstrates regression detection and recovery for these runs, not a general
+reliability estimate. It used deterministic checks of actions, with no LLM judge.
+Generated experiment artifacts remain local and excluded from Git.
